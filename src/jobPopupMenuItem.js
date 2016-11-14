@@ -68,10 +68,25 @@ const JobPopupMenuItem = new Lang.Class({
 
 		// menu item label (job name)
 		this.label = new St.Label({ text: job.name });
-                this.jobUrl = job.url;
+
+		// button used to open last successful build
+		this.versionNumber = '';
+		this.versionLabel = new St.Label({ text: '' });
+		this.versionButton = new St.Label({ child: this.versionLabel });
+		try{
+			this.versionLabel.text = ' ' + job.lastBuild.number;
+			this.versionNumber = job.lastBuild.number;
+			this.versionButton.connect('clicked', Lang.bind(this, function(){
+				Gio.app_info_launch_default_for_uri(Utils.urlAppend(this.getJobUrl(), this.getLastBuildNumber()), global.create_app_launch_context(0, -1));
+				this.parentMenu.close();
+			}));
+		} catch(e) {}
+
+        this.jobUrl = job.url;
 
 		this.box.add(this.icon);
 		this.box.add(this.label);
+		this.box.add(this.versionButton);
 
 		// For Gnome 3.8 and below
 		if( typeof this.addActor != 'undefined' ) {
@@ -103,6 +118,11 @@ const JobPopupMenuItem = new Lang.Class({
 	// return job url
 	getJobUrl: function() {
 		return this.jobUrl;
+	},
+
+	// return last successful job build
+	getLastBuildNumber: function() {
+		return this.versionNumber;
 	},
 
 	// update menu item text and icon
